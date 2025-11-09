@@ -3,8 +3,6 @@
     "baseUrl": ".",
     "paths": {
       "@firstrankcoders/shared/*": ["./libs/shared/src/*"],
-      "@firstrankcoders/shared/database": ["./libs/shared/src/database"],
-      "@firstrankcoders/shared/utils": ["./libs/shared/src/utils"]
     },
     "moduleResolution": "node",
     "target": "es2019",
