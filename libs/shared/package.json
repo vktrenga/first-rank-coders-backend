@@ -4,9 +4,15 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "nest build"
+    "build": "tsc -p tsconfig.build.json"
   },
   "devDependencies": {
+    "prisma": "^6.19.0",
     "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "@nestjs/config": "^4.0.2",
+    "@prisma/client": "^6.19.0",
+    "dotenv": "^16.4.7"
   }
 }
