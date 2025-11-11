@@ -1,0 +1,84 @@
+
+services:
+  # ============================
+  # User Service
+  # ============================
+  user-service:
+    build:
+      context: .
+      dockerfile: apps/user/Dockerfile
+    container_name: user
+    ports:
+      - "3002:3000"
+    env_file:
+      - ./apps/user/.env
+    depends_on:
+      - postgres
+    restart: always
+
+  # ============================
+  # Auth Service
+  # ============================
+  auth-service:
+    build:
+      context: .
+      dockerfile: apps/auth/Dockerfile
+    container_name: auth-service
+    ports:
+      - "3001:3000"
+    env_file:
+      - ./apps/auth/.env
+    depends_on:
+      - postgres
+    restart: always
+
+  # ============================
+  # Contest Service
+  # ============================
+  contest-service:
+    build:
+      context: .
+      dockerfile: apps/contest/Dockerfile
+    container_name: contest-service
+    ports:
+      - "3003:3000"
+    env_file:
+      - ./apps/contest/.env 
+    depends_on:
+      - postgres
+    restart: always
+
+  # ============================
+  # PostgreSQL Database docker run --name postgres-db -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=frc -p 5432:5432 -d postgres:16
+
+  # ============================
+  postgres:
+    image: postgres:16-alpine
+    container_name: postgres-db
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: frc
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: always
+
+  # ============================
+  # pgAdmin (optional)
+  # ============================
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+    restart: always
+
+volumes:
+  postgres_data:

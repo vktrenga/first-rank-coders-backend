@@ -2,7 +2,7 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@firstrankcoders/shared/*": ["./libs/shared/src/*"],
+      "@firstrankcoders/shared": ["libs/shared/*"],
     },
     "moduleResolution": "node",
     "target": "es2019",
