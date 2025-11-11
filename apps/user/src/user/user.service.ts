@@ -1,14 +1,24 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '@firstrankcoders/shared';
+import { PrismaExceptionMapper, PrismaService } from '@firstrankcoders/shared';
 import { CreateUserDto } from '../user/dto/create-user.dto';
 import { UpdateUserDto } from '../user/dto/update-user.dto';
+import { BaseResponse, AppException, NotFoundException } from '@firstrankcoders/shared';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/binary';
 
 @Injectable()
 export class UserService {
   constructor(private prisma: PrismaService) {}
 
   async create(data: CreateUserDto) {
-    return this.prisma.user.create({ data });
+      try {
+        const user = await this.prisma.user.create({ data });
+        return BaseResponse.success(user, 'User created successfully');
+
+      } catch (error) {
+          const mapped = PrismaExceptionMapper.map(error);
+          if (mapped) throw mapped;
+          throw error;
+      }
   }
 
   async findAll() {
