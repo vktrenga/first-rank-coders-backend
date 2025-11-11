@@ -4,16 +4,23 @@ import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
-  constructor(private configService: ConfigService) {
+  constructor(private readonly configService: ConfigService) {
+
+        console.log('LIB-level DATABASE_URL:', process.env.DATABASE_URL);
+
+    const dbUrl =process.env.DATABASE_URL; // fallback used during super()
     super({
-      datasources: {
-        db: { url: configService.get<string>('DATABASE_URL') },
-      },
+      datasources: { db: { url: dbUrl } },
     });
   }
 
   async onModuleInit() {
-    await this.$connect();
+    // Optional recheck using ConfigService (it’s available now)
+    console.log('LIB-level DATABASE_URL:', process.env.DATABASE_URL);
+
+    const dbUrl =  process.env.DATABASE_URL
+   await this.$connect();
+    console.log(`✅ Connected to database: ${dbUrl}`);
   }
 
   async onModuleDestroy() {

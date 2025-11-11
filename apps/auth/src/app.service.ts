@@ -1,9 +1,13 @@
+
+
 import { Injectable } from '@nestjs/common';
-import * as  firstrankcoders from '@firstrankcoders/shared';
+import {UtilsService} from '@firstrankcoders/shared';
 
 @Injectable()
 export class AppService {
+  constructor (private readonly utilsService: UtilsService){ 
+  }
   getHello(): string {
-    return  firstrankcoders.greet("Auth Service");;
+    return  " Auth Service "+ this.utilsService.currentDateTime();
   }
 }

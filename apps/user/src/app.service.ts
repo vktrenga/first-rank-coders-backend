@@ -1,10 +1,14 @@
+
+
 import { Injectable } from '@nestjs/common';
-import {UtilsService} from '@firstrankcoders/shared';
+import { UtilsService, PrismaService } from '@firstrankcoders/shared';
 
 @Injectable()
 export class AppService {
+  constructor (private readonly utilsService: UtilsService, private readonly prismaService: PrismaService) { 
+  }
   getHello(): string {
-    const utilsService = new UtilsService()
-    return  utilsService.currentDateTime();
+    this.prismaService.user.findMany();
+    return  " User Service "+ this.utilsService.currentDateTime();
   }
 }

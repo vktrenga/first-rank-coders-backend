@@ -8,10 +8,14 @@
   ],
   "scripts": {
     "build": "npm run build:libs && npm run build:apps",
+    "build:user": "npm run build:libs && npm run build -w apps/user",
     "build:libs": "npm run build -w @firstrankcoders/shared",
-    "build:apps": "npm run build -w apps/user",
+    "build:apps": "npm run build -w apps/user && npm run build -w apps/auth && npm run build -w apps/contest",
     "start:dev": "npm run start:dev -w apps/user",
-    "start": "npm run start -w apps/user",
+    "start:apps": "npm run start -w apps/auth && npm run start -w apps/user && npm run start -w apps/contest",
+    "start:user": "npm run start -w apps/user",
+    "start:auth": "npm run start -w apps/auth",
+    "start:contest": "npm run start -w apps/contest",
     "test": "npm run test -w apps/user",
     "clean": "rimraf \"{apps,libs}/**/dist\" \"{apps,libs}/**/node_modules\"",
     "install:all": "npm install && npm run build:libs"

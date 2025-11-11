@@ -8,8 +8,54 @@ generator client {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
+  id        String   @id @default(cuid())
+  name      String
   email     String   @unique
-  name      String?
+  password  String
+  role      Role     @default(ORG_USER)
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // 👇 Regular membership in an organization
+  organizationId String?
+  organization   Organization? @relation("OrgMembers", fields: [organizationId], references: [id])
+
+  // 👇 Admin of an organization
+  adminOfOrg Organization? @relation("OrgAdmin")
+}
+
+model Organization {
+  id            String   @id @default(cuid())
+  name          String
+  type          OrgType  @default(ORGANIZATION)
+  email         String?
+  contactNumber String?
+  website       String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // 👇 Admin relationship (1:1)
+  adminId String? @unique
+  admin   User?   @relation("OrgAdmin", fields: [adminId], references: [id])
+
+  // 👇 Regular users (1:N)
+  users User[] @relation("OrgMembers")
+}
+
+// ==================
+//  ORGANIZATION TYPE
+// ==================
+enum OrgType {
+  ORGANIZATION
+  JOB_PROVIDER
+}
+
+// ==================
+//  ROLES
+// ==================
+enum Role {
+  SUPER_ADMIN // platform owner
+  ADMIN_EMPLOYEE // works for admin
+  ORG_ADMIN // organization / job provider admin
+  ORG_USER // student or employee
 }

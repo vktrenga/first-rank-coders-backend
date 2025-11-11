@@ -117,5 +117,14 @@ npm run clean
 3. Submit a pull request
 
 ## License
+Run postgres in docker
+docker-compose up -d postgres-db
 
-This project is private and confidential. All rights reserved.
+Run this command to connect to the default postgres database (which always exists):
+    docker exec -it postgres-db psql -U postgres -d frc
+Now you can verify it works:
+docker exec -it postgres-db psql -U postgres -d frc
+
+npx prisma migrate dev --schema=libs/shared/database/prisma/schema.prisma
+npx prisma generate --schema=libs/shared/database/prisma/schema.prisma
+npx prisma format --schema=libs/shared/database/prisma/schema.prisma

@@ -1,19 +1,21 @@
  import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import * as shared  from '@firstrankcoders/shared';
+import {UtilsService, PrismaModule }  from '@firstrankcoders/shared';
 import { AppService } from './app.service';
 import { AppController } from './app.controller';
+import { UserModule } from './user/user.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: 'libs/shared/database/prisma/.env', // points to shared env
+      envFilePath: ['.env'], // adjust per app
     }),
-    
+    PrismaModule,
+    UserModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, UtilsService],
   exports: [AppService],
 })
 export class AppModule {}
