@@ -9,7 +9,7 @@ export class BaseResponse<T = any> {
   }
 
   static success<T>(data: T, message = 'Success'): BaseResponse<T> {
-    return new BaseResponse.success({ success: true, message, data });
+    return new BaseResponse({ success: true, message, data });
   }
 
   static error(message: string, errors?: any): BaseResponse {

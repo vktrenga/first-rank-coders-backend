@@ -1,61 +1,95 @@
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-}
-
 generator client {
   provider = "prisma-client-js"
 }
 
-model User {
-  id        String   @id @default(cuid())
-  name      String
-  email     String   @unique
-  password  String
-  role      Role     @default(ORG_USER)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // 👇 Regular membership in an organization
-  organizationId String?
-  organization   Organization? @relation("OrgMembers", fields: [organizationId], references: [id])
-
-  // 👇 Admin of an organization
-  adminOfOrg Organization? @relation("OrgAdmin")
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+model Auth {
+  id        String   @id @default(uuid())
+  email     String @unique
+  password  String 
+  refreshToken String
+  loginAttempts Int @default(0)
+  isEmailVerified Boolean @default(false)
 }
 
 model Organization {
-  id            String   @id @default(cuid())
-  name          String
-  type          OrgType  @default(ORGANIZATION)
-  email         String?
-  contactNumber String?
-  website       String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  // 👇 Admin relationship (1:1)
-  adminId String? @unique
-  admin   User?   @relation("OrgAdmin", fields: [adminId], references: [id])
-
-  // 👇 Regular users (1:N)
-  users User[] @relation("OrgMembers")
+  id        String   @id @default(uuid())
+  name      String
+  code      String?  @unique
+  type      OrgType  @default(COLLEGE) // "COLLEGE" or "COMPANY"
+  domain    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  departments Department[]
+  users       User[]
 }
 
-// ==================
-//  ORGANIZATION TYPE
-// ==================
+model Department {
+  id             String   @id @default(uuid())
+  name           String
+  code           String?
+  organizationId String
+  headId         String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  classes      Class[]
+  head         User?        @relation("DepartmentHead", fields: [headId], references: [id])
+  users        User[]
+}
+
+model Class {
+  id             String   @id @default(uuid())
+  name           String
+  section        String?
+  semester       Int?
+  departmentId   String
+  classTeacherId String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  department   Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  classTeacher User?      @relation("ClassTeacher", fields: [classTeacherId], references: [id])
+  students     User[]     @relation("ClassStudents")
+}
+
+model User {
+  id             String   @id @default(uuid())
+  authUserId     String   @unique
+  name           String
+  email          String   @unique
+  password       String
+  role           Role
+  organizationId String?
+  departmentId   String?
+  classId        String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  department   Department?  @relation(fields: [departmentId], references: [id])
+  class        Class?       @relation("ClassStudents", fields: [classId], references: [id])
+
+  // ✅ Added reverse relations
+  headedDepartments Department[] @relation("DepartmentHead") // HOD of multiple departments (optional)
+  taughtClasses     Class[]      @relation("ClassTeacher") // Teacher of one or more classes
+}
+
 enum OrgType {
-  ORGANIZATION
-  JOB_PROVIDER
+  COLLEGE
+  COMPANY
 }
 
-// ==================
-//  ROLES
-// ==================
 enum Role {
-  SUPER_ADMIN // platform owner
-  ADMIN_EMPLOYEE // works for admin
-  ORG_ADMIN // organization / job provider admin
-  ORG_USER // student or employee
+  PRINCIPAL
+  HOD
+  STAFF
+  STUDENT
+  ADMIN
+  HR
+  RECRUITER
 }

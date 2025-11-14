@@ -128,3 +128,13 @@ docker exec -it postgres-db psql -U postgres -d frc
 npx prisma migrate dev --schema=libs/shared/database/prisma/schema.prisma
 npx prisma generate --schema=libs/shared/database/prisma/schema.prisma
 npx prisma format --schema=libs/shared/database/prisma/schema.prisma
+npx prisma migrate reset --schema=libs/shared/database/prisma/schema.prisma
+
+npx prisma validate --schema=libs/shared/database/prisma/schema.prisma
+npx prisma migrate dev --create-only  --schema=libs/shared/database/prisma/schema.prisma
+
+--create-only 
+![alt text](image.png)
+
+
+![alt text](image-1.png)
