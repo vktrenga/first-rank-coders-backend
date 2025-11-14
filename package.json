@@ -11,10 +11,11 @@
     "build:user": "npm run build:libs && npm run build -w apps/user",
     "build:libs": "npm run build -w @firstrankcoders/shared",
     "build:apps": "npm run build -w apps/user && npm run build -w apps/auth && npm run build -w apps/contest",
-    "start:dev": "npm run start:dev -w apps/user",
+    "dev:auth": "npm run start:dev -w apps/auth",
     "start:apps": "npm run start -w apps/auth && npm run start -w apps/user && npm run start -w apps/contest",
     "start:user": "npm run start -w apps/user",
     "start:auth": "npm run start -w apps/auth",
+    "start:org": "npm run start -w apps/organization",
     "start:contest": "npm run start -w apps/contest",
     "test": "npm run test -w apps/user",
     "clean": "rimraf \"{apps,libs}/**/dist\" \"{apps,libs}/**/node_modules\"",
@@ -25,8 +26,10 @@
   },
   "dependencies": {
     "@nestjs/config": "^4.0.2",
+    "@nestjs/swagger": "^11.2.1",
     "@prisma/client": "^6.19.0",
     "dotenv": "^17.2.3",
-    "prisma": "^6.19.0"
+    "prisma": "^6.19.0",
+    "swagger-ui-express": "^5.0.1"
   }
 }

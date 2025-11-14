@@ -11,7 +11,26 @@ export class UserService {
 
   async create(data: CreateUserDto) {
       try {
-        const user = await this.prisma.user.create({ data });
+        
+        // transform DTO to Prisma create input: if organizationId is provided,
+        // use nested connect syntax and remove organizationId from raw payload
+        const createData: any = { ...data };
+        const relationFields = ['organizationId', 'departmentId', 'classId'];
+        const relationMap: Record<string, string> = {
+          organizationId: 'organization',
+          departmentId: 'department',
+          classId: 'class',
+        };
+
+        relationFields.forEach(field => {
+          if (data[field as keyof typeof data]) {
+            const relationKey = relationMap[field];
+            createData[relationKey] = { connect: { id: data[field as keyof typeof data] } };
+            delete createData[field];
+          }
+        });
+
+        const user = await this.prisma.user.create({ data: createData });
         return BaseResponse.success(user, 'User created successfully');
 
       } catch (error) {
@@ -23,14 +42,14 @@ export class UserService {
 
   async findAll() {
     return this.prisma.user.findMany({
-      include: { organization: true, adminOfOrg: true },
+      include: { organization: true },
     });
   }
 
   async findOne(id: string) {
     return this.prisma.user.findUnique({
       where: { id },
-      include: { organization: true, adminOfOrg: true },
+      include: { organization: true},
     });
   }
 
