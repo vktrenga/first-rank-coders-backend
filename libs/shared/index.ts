@@ -5,3 +5,5 @@ export * from './common/exceptions/app.exception';
 export * from './common/exceptions/prisma-exception.mapper';
 export * from './common/filters/all-exceptions.filter';
 export * from './common/filters/validation-exception.filter';
+export * from './common/logger/logger';
+export * from './utils/mask.service';

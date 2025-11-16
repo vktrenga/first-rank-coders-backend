@@ -1,10 +1,14 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
+import { ValidationPipe } from '@nestjs/common';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
   const port = configService.get('PORT');
+
+  app.useGlobalPipes(new ValidationPipe());
+
 
   // Swagger setup
   if (process.env.NODE_ENV !== 'production') {
@@ -19,6 +23,8 @@ async function bootstrap() {
     SwaggerModule.setup('api', app, document);
     console.log('Swagger docs available at /api');
   }
+  // Note: Please install "class-transformer" to fully utilize ValidationPipe:
+  // npm install class-transformer
 
   console.log(`App running on port: ${port}`);
   await app.listen(configService.get('PORT') ?? 3000);
