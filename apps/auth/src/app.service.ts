@@ -5,6 +5,7 @@ import { SignupDto } from './dto/signup.dto';
 import { LoginDto } from './dto/login.dto';
 import { AppLogger, MaskService } from '@firstrankcoders/shared/';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/binary';
+import { AUTH_REFRESH_TOKEN_EXPIRY, AUTH_TOKEN_EXPIRY, ERROR_MESSAGES } from './constants/auth.constants';
 import jwt from 'jsonwebtoken';
 
 @Injectable()
@@ -85,7 +86,7 @@ export class AppService {
       });
 
       if (existingUser) {
-        return BaseResponse.error('User with this email already exists', null);
+        return BaseResponse.error(ERROR_MESSAGES.USER_EXISTS, null);
       }
 
       // Hash the password
@@ -94,7 +95,7 @@ export class AppService {
       const refreshToken = jwt.sign(
         { authId: email },
         process.env.JWT_REFRESH_SECRET || 'default_refresh_secret',
-        { expiresIn: '7d' }
+        { expiresIn: AUTH_REFRESH_TOKEN_EXPIRY }
       );
       // Create user in Auth model with isEmailVerified: false
       const authUser = await this.prisma.auth.create({
@@ -143,7 +144,7 @@ export class AppService {
       });
 
       if (!authUser) {
-        return BaseResponse.error('Invalid credentials', null);
+        return BaseResponse.error(ERROR_MESSAGES.INVALID_CREDENTIALS, null);
       }
 
       // Verify password
@@ -155,7 +156,7 @@ export class AppService {
           data: { loginAttempts: authUser.loginAttempts + 1 },
         });
 
-        return BaseResponse.error('Invalid credentials', null);
+        return BaseResponse.error(ERROR_MESSAGES.INVALID_CREDENTIALS, null);
       }
 
       // Reset login attempts on successful login
@@ -168,12 +169,12 @@ export class AppService {
       const accessToken = jwt.sign(
         { authId: authUser.id, email: authUser.email },
         process.env.JWT_SECRET || 'default_secret',
-        { expiresIn: '1h' }
+        { expiresIn: AUTH_TOKEN_EXPIRY }
       );
       const refreshToken = jwt.sign(
         { authId: authUser.id },
         process.env.JWT_REFRESH_SECRET || 'default_refresh_secret',
-        { expiresIn: '7d' }
+        { expiresIn: AUTH_REFRESH_TOKEN_EXPIRY }
       );
 
       // Save refresh token to user record
@@ -261,14 +262,14 @@ export class AppService {
         return BaseResponse.error('User not found', null);
       }
       if (authUser.refreshToken !== refreshToken) {
-        return BaseResponse.error('Invalid refresh token', null);
+        return BaseResponse.error(ERROR_MESSAGES.INVALID_CREDENTIALS, null);
       }
 
       // Issue new access token
       const accessToken = jwt.sign(
         { authId: authUser.id, email: authUser.email },
         process.env.JWT_SECRET || 'default_secret',
-        { expiresIn: '1h' }
+        { expiresIn: AUTH_TOKEN_EXPIRY }
       );
 
       return BaseResponse.success(
