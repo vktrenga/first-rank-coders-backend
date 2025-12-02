@@ -1,7 +1,7 @@
 import { Injectable, NestInterceptor, ExecutionContext, CallHandler } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { MaskService } from './mask.service';
+import { MaskService } from '../../utils/mask.service';
 
 // Example interceptor to mask personal info in responses
 @Injectable()

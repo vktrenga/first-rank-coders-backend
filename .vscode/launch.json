@@ -1,0 +1,45 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Debug NestJS Organization",
+      "program": "${workspaceFolder}/apps/organization/src/main.ts",
+      "cwd": "${workspaceFolder}",
+    //   "runtimeArgs": ["-r", "ts-node/register"],
+    "env": {
+        "TS_NODE_PROJECT": "${workspaceFolder}/apps/organization/tsconfig.json",
+        "PORT": "3002"
+    },
+      "console": "integratedTerminal",
+      "autoAttachChildProcesses": true
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Debug NestJS User",
+      "program": "${workspaceFolder}/apps/user/src/main.ts",
+      "cwd": "${workspaceFolder}",
+      "runtimeArgs": ["-r", "ts-node/register"],
+      "env": {
+        "TS_NODE_PROJECT": "${workspaceFolder}/apps/user/tsconfig.json"
+      },
+      "console": "integratedTerminal",
+      "autoAttachChildProcesses": true
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Debug NestJS Auth",
+      "program": "${workspaceFolder}/apps/auth/src/main.ts",
+      "cwd": "${workspaceFolder}",
+      "runtimeArgs": ["-r", "ts-node/register"],
+      "env": {
+        "TS_NODE_PROJECT": "${workspaceFolder}/apps/auth/tsconfig.json"
+      },
+      "console": "integratedTerminal",
+      "autoAttachChildProcesses": true
+    }
+  ]
+}

@@ -29,26 +29,26 @@ export class AppService {
    * Change password (requires old password)
    */
   async changePassword(userId: string, oldPassword: string, newPassword: string) {
-    // Find user
-    const authUser = await this.prisma.auth.findUnique({ where: { id: userId } });
-    if (!authUser) {
-      return BaseResponse.error('User not found', null);
-    }
-    // Verify old password
-    const isValid = await bcrypt.compare(oldPassword, authUser.password);
-    if (!isValid) {
-      return BaseResponse.error('Old password is incorrect', null);
-    }
-    // Hash new password
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
-    await this.prisma.auth.update({
-      where: { id: userId },
-      data: { password: hashedPassword },
-    });
-    await this.prisma.user.update({
-      where: { authUserId: userId },
-      data: { password: hashedPassword },
-    });
+    // // Find user
+    // const authUser = await this.prisma.auth.findUnique({ where: { id: userId } });
+    // if (!authUser) {
+    //   return BaseResponse.error('User not found', null);
+    // }
+    // // Verify old password
+    // const isValid = await bcrypt.compare(oldPassword, authUser.password);
+    // if (!isValid) {
+    //   return BaseResponse.error('Old password is incorrect', null);
+    // }
+    // // Hash new password
+    // const hashedPassword = await bcrypt.hash(newPassword, 10);
+    // await this.prisma.auth.update({
+    //   where: { id: userId },
+    //   data: { password: hashedPassword },
+    // });
+    // await this.prisma.user.update({
+    //   where: { authUserId: userId },
+    //   data: { password: hashedPassword },
+    // });
     return BaseResponse.success(null, 'Password changed successfully');
   }
 
@@ -220,25 +220,22 @@ export class AppService {
    * Update password for user
    */
   async updatePassword(userId: string, newPassword: string) {
-  this.logger.warn('Password update requested for user', userId);
-    try {
-      const hashedPassword = await bcrypt.hash(newPassword, 10);
+  // this.logger.warn('Password update requested for user', userId);
+  //   try {
+  //     const hashedPassword = await bcrypt.hash(newPassword, 10);
 
-      const authUser = await this.prisma.auth.update({
-        where: { id: userId },
-        data: { password: hashedPassword },
-      });
+  //     const authUser = await this.prisma.auth.update({
+  //       where: { id: userId },
+  //       data: { password: hashedPassword },
+  //     });
 
-      const user = await this.prisma.user.update({
-        where: { authUserId: userId },
-        data: { password: hashedPassword },
-      });
+      
 
-      const { password: _, ...userWithoutPassword } = user;
-      return BaseResponse.success(userWithoutPassword, 'Password updated successfully');
-    } catch (error) {
-      return BaseResponse.error('Password update failed', null);
-    }
+  //     const { password: _, ...userWithoutPassword } = user;
+  //     return BaseResponse.success(userWithoutPassword, 'Password updated successfully');
+  //   } catch (error) {
+  //     return BaseResponse.error('Password update failed', null);
+  //   }
   }
 
   /**

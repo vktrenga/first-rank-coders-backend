@@ -1,11 +1,15 @@
 {
   "compilerOptions": {
     "declaration": true,
+    "strict": false,
     "outDir": "dist",
     "module": "commonjs",
-    "target": "es2019"
+    "target": "es2019",
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true
   },
   "include": [ 
+    "api-client/src/**/*",
     "utils/**/*",
     "database/src/**/*"
     ]

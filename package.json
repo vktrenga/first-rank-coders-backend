@@ -16,6 +16,7 @@
     "start:user": "npm run start -w apps/user",
     "start:auth": "npm run start -w apps/auth",
     "start:org": "npm run start -w apps/organization",
+    "dev:org": "npm run start:dev -w apps/organization",
     "start:contest": "npm run start -w apps/contest",
     "test": "npm run test -w apps/user",
     "clean": "rimraf \"{apps,libs}/**/dist\" \"{apps,libs}/**/node_modules\"",
