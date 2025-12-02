@@ -1,4 +1,4 @@
-import { Prisma, Role } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { IsString, IsEmail, IsEnum, IsOptional, IsUUID } from 'class-validator';
 
 // export class CreateUserDto  implements Prisma.UserCreateInput {
@@ -13,9 +13,9 @@ import { IsString, IsEmail, IsEnum, IsOptional, IsUUID } from 'class-validator';
 export class CreateUserDto {
   @IsString()
   name: string;
-
-  @IsEnum(Role)
-  role: Role;
+    
+  @IsOptional()
+  role: string;
 
   @IsOptional()
   @IsUUID()

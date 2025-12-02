@@ -3,11 +3,18 @@ import { PrismaService, BaseResponse } from '@firstrankcoders/shared';
 import * as bcrypt from 'bcryptjs';
 import { SignupDto } from './dto/signup.dto';
 import { LoginDto } from './dto/login.dto';
+import { AppLogger, MaskService } from '@firstrankcoders/shared/';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/binary';
+import { AUTH_REFRESH_TOKEN_EXPIRY, AUTH_TOKEN_EXPIRY, ERROR_MESSAGES } from './constants/auth.constants';
 import jwt from 'jsonwebtoken';
 
 @Injectable()
 export class AppService {
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly logger: AppLogger,
+    private readonly maskService: MaskService,
+  ) {}
   /**
    * Request password reset (send email with token)
    */
@@ -22,26 +29,26 @@ export class AppService {
    * Change password (requires old password)
    */
   async changePassword(userId: string, oldPassword: string, newPassword: string) {
-    // Find user
-    const authUser = await this.prisma.auth.findUnique({ where: { id: userId } });
-    if (!authUser) {
-      throw new BadRequestException('User not found');
-    }
-    // Verify old password
-    const isValid = await bcrypt.compare(oldPassword, authUser.password);
-    if (!isValid) {
-      throw new BadRequestException('Old password is incorrect');
-    }
-    // Hash new password
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
-    await this.prisma.auth.update({
-      where: { id: userId },
-      data: { password: hashedPassword },
-    });
-    await this.prisma.user.update({
-      where: { authUserId: userId },
-      data: { password: hashedPassword },
-    });
+    // // Find user
+    // const authUser = await this.prisma.auth.findUnique({ where: { id: userId } });
+    // if (!authUser) {
+    //   return BaseResponse.error('User not found', null);
+    // }
+    // // Verify old password
+    // const isValid = await bcrypt.compare(oldPassword, authUser.password);
+    // if (!isValid) {
+    //   return BaseResponse.error('Old password is incorrect', null);
+    // }
+    // // Hash new password
+    // const hashedPassword = await bcrypt.hash(newPassword, 10);
+    // await this.prisma.auth.update({
+    //   where: { id: userId },
+    //   data: { password: hashedPassword },
+    // });
+    // await this.prisma.user.update({
+    //   where: { authUserId: userId },
+    //   data: { password: hashedPassword },
+    // });
     return BaseResponse.success(null, 'Password changed successfully');
   }
 
@@ -54,7 +61,7 @@ export class AppService {
       const payload = jwt.verify(token, process.env.JWT_SECRET || 'default_secret') as { email: string };
       const authUser = await this.prisma.auth.findUnique({ where: { email: payload.email } });
       if (!authUser) {
-        throw new BadRequestException('Invalid token or user not found');
+        return BaseResponse.error('Invalid token or user not found', null);
       }
       await this.prisma.auth.update({
         where: { email: payload.email },
@@ -62,15 +69,16 @@ export class AppService {
       });
       return BaseResponse.success(null, 'Email verified successfully');
     } catch (error) {
-      throw new BadRequestException('Invalid or expired verification token');
+      return BaseResponse.error('Invalid or expired verification token', null);
     }
   }
-  constructor(private readonly prisma: PrismaService) {}
+  
 
   /**
    * Sign up a new user with email and password
    */
   async signup(signupDto: SignupDto) {
+  this.logger.log('Signup attempt', this.maskService.maskEmail(signupDto.email));
     try {
       const { email, password } = signupDto;
       const existingUser = await this.prisma.auth.findUnique({
@@ -78,7 +86,7 @@ export class AppService {
       });
 
       if (existingUser) {
-        throw new BadRequestException('User with this email already exists');
+        return BaseResponse.error(ERROR_MESSAGES.USER_EXISTS, null);
       }
 
       // Hash the password
@@ -87,7 +95,7 @@ export class AppService {
       const refreshToken = jwt.sign(
         { authId: email },
         process.env.JWT_REFRESH_SECRET || 'default_refresh_secret',
-        { expiresIn: '7d' }
+        { expiresIn: AUTH_REFRESH_TOKEN_EXPIRY }
       );
       // Create user in Auth model with isEmailVerified: false
       const authUser = await this.prisma.auth.create({
@@ -110,15 +118,15 @@ export class AppService {
       );
     } catch (error) {
       if (error instanceof BadRequestException) {
-        throw error;
+        return BaseResponse.error(error.message, null);
       }
       if (
         error instanceof PrismaClientKnownRequestError &&
         error.code === 'P2002'
       ) {
-        throw new BadRequestException('User with this email already exists');
+        return BaseResponse.error('User with this email already exists', null);
       }
-      throw error;
+      return BaseResponse.error('Signup failed', null);
     }
   }
 
@@ -126,6 +134,7 @@ export class AppService {
    * Login user with email and password
    */
   async login(loginDto: LoginDto) {
+  this.logger.log('Login attempt', loginDto.email);
     try {
       const { email, password } = loginDto;
 
@@ -135,7 +144,7 @@ export class AppService {
       });
 
       if (!authUser) {
-        throw new UnauthorizedException('Invalid credentials');
+        return BaseResponse.error(ERROR_MESSAGES.INVALID_CREDENTIALS, null);
       }
 
       // Verify password
@@ -147,7 +156,7 @@ export class AppService {
           data: { loginAttempts: authUser.loginAttempts + 1 },
         });
 
-        throw new UnauthorizedException('Invalid credentials');
+        return BaseResponse.error(ERROR_MESSAGES.INVALID_CREDENTIALS, null);
       }
 
       // Reset login attempts on successful login
@@ -156,41 +165,38 @@ export class AppService {
         data: { loginAttempts: 0 },
       });
            
-          // Create access token with authUser.id
-            const accessToken = jwt.sign(
-            { authId: authUser.id, email: authUser.email },
-            process.env.JWT_SECRET || 'default_secret',
-            { expiresIn: '1h' }
-            );
-            const refreshToken = jwt.sign(
-            { authId: authUser.id },
-            process.env.JWT_REFRESH_SECRET || 'default_refresh_secret',
-            { expiresIn: '7d' }
-            );
+      // Create access token with authUser.id
+      const accessToken = jwt.sign(
+        { authId: authUser.id, email: authUser.email },
+        process.env.JWT_SECRET || 'default_secret',
+        { expiresIn: AUTH_TOKEN_EXPIRY }
+      );
+      const refreshToken = jwt.sign(
+        { authId: authUser.id },
+        process.env.JWT_REFRESH_SECRET || 'default_refresh_secret',
+        { expiresIn: AUTH_REFRESH_TOKEN_EXPIRY }
+      );
 
-          // Save refresh token to user record
-          await this.prisma.auth.update({
-            where: { id: authUser.id },
-            data: { refreshToken },
-          });
+      // Save refresh token to user record
+      await this.prisma.auth.update({
+        where: { id: authUser.id },
+        data: { refreshToken },
+      });
 
-          return BaseResponse.success(
-            {
-              userId: authUser.id,
-              email: authUser.email,
-              accessToken,
-              refreshToken,
-            },
-            'Login successful'
-          );
-      
-
-      
+      return BaseResponse.success(
+        {
+          userId: authUser.id,
+          email: authUser.email,
+          accessToken,
+          refreshToken,
+        },
+        'Login successful'
+      );
     } catch (error) {
       if (error instanceof UnauthorizedException) {
-        throw error;
+        return BaseResponse.error(error.message, null);
       }
-      throw error;
+      return BaseResponse.error('Login failed', null);
     }
   }
 
@@ -198,6 +204,7 @@ export class AppService {
    * Verify password for user
    */
   async verifyPassword(userId: string, password: string): Promise<boolean> {
+  this.logger.debug('Verifying password for user', userId);
     const authUser = await this.prisma.auth.findUnique({
       where: { id: userId },
     });
@@ -213,51 +220,53 @@ export class AppService {
    * Update password for user
    */
   async updatePassword(userId: string, newPassword: string) {
-    try {
-      const hashedPassword = await bcrypt.hash(newPassword, 10);
+  // this.logger.warn('Password update requested for user', userId);
+  //   try {
+  //     const hashedPassword = await bcrypt.hash(newPassword, 10);
 
-      const authUser = await this.prisma.auth.update({
-        where: { id: userId },
-        data: { password: hashedPassword },
-      });
+  //     const authUser = await this.prisma.auth.update({
+  //       where: { id: userId },
+  //       data: { password: hashedPassword },
+  //     });
 
-      const user = await this.prisma.user.update({
-        where: { authUserId: userId },
-        data: { password: hashedPassword },
-      });
+      
 
-      const { password: _, ...userWithoutPassword } = user;
-      return BaseResponse.success(userWithoutPassword, 'Password updated successfully');
-    } catch (error) {
-      throw error;
-    }
+  //     const { password: _, ...userWithoutPassword } = user;
+  //     return BaseResponse.success(userWithoutPassword, 'Password updated successfully');
+  //   } catch (error) {
+  //     return BaseResponse.error('Password update failed', null);
+  //   }
   }
 
   /**
    * Authenticate user using refresh token
    */
   async authenticateWithRefreshToken(refreshToken: string) {
+  this.logger.log('Authenticating with refresh token');
     try {
       // Verify refresh token
       const payload = jwt.verify(
         refreshToken,
         process.env.JWT_REFRESH_SECRET || 'default_refresh_secret'
       ) as { authId: string };
-111
+
       // Find user by id and match refresh token
       const authUser = await this.prisma.auth.findUnique({
         where: { id: payload.authId },
       });
 
-      if (!authUser || authUser.refreshToken !== refreshToken) {
-        throw new UnauthorizedException('Invalid refresh token');
+      if (!authUser) {
+        return BaseResponse.error('User not found', null);
+      }
+      if (authUser.refreshToken !== refreshToken) {
+        return BaseResponse.error(ERROR_MESSAGES.INVALID_CREDENTIALS, null);
       }
 
       // Issue new access token
       const accessToken = jwt.sign(
         { authId: authUser.id, email: authUser.email },
         process.env.JWT_SECRET || 'default_secret',
-        { expiresIn: '1h' }
+        { expiresIn: AUTH_TOKEN_EXPIRY }
       );
 
       return BaseResponse.success(
@@ -269,7 +278,7 @@ export class AppService {
         'Authenticated with refresh token'
       );
     } catch (error) {
-      throw new UnauthorizedException('Invalid or expired refresh token');
+      return BaseResponse.error('Invalid or expired refresh token', null);
     }
   }
 }

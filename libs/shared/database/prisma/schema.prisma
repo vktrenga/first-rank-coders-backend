@@ -14,18 +14,48 @@ model Auth {
   loginAttempts Int @default(0)
   isEmailVerified Boolean @default(false)
 }
-
 model Organization {
-  id        String   @id @default(uuid())
-  name      String
-  code      String?  @unique
-  type      OrgType  @default(COLLEGE) // "COLLEGE" or "COMPANY"
-  domain    String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  departments Department[]
-  users       User[]
+  id            String        @id @default(uuid())
+  name          String
+  code          String? 
+
+  // Type: COLLEGE / COMPANY / SCHOOL / STARTUP / NGO …
+  type          OrgType       @default(COLLEGE)
+
+  // Domain for email-based auto-join validation (optional)
+  domain        String?       @unique
+
+  // Contact details
+  email         String?
+  phone         String?
+  website       String?
+
+  // Location
+  address       String?
+  city          String?
+  state         String?
+  country       String?
+  pincode       String?
+
+  // Branding
+  logoUrl       String?
+  coverImageUrl String?
+
+  // Subscription / Billing
+ // plan          PlanType      @default(FREE)
+ // planExpiresAt DateTime?
+ // isActive      Boolean       @default(true)
+
+  // Audit fields
+  createdBy     String?  // userId or authId of who created the organization
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  departments   Department[]
+  users         User[]
 }
+
 
 model Department {
   id             String   @id @default(uuid())
@@ -62,8 +92,7 @@ model User {
   authUserId     String   @unique
   name           String
   email          String   @unique
-  password       String
-  role           Role
+  role           Role?
   organizationId String?
   departmentId   String?
   classId        String?

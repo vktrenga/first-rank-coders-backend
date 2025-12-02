@@ -1,0 +1,10 @@
+export enum AuthRole {
+  ADMIN = 'ADMIN',
+  USER = 'USER',
+  STAFF = 'STAFF',
+  STUDENT = 'STUDENT',
+  HOD = 'HOD',
+  PRINCIPAL = 'PRINCIPAL',
+  HR = 'HR',
+  RECRUITER = 'RECRUITER',
+}
