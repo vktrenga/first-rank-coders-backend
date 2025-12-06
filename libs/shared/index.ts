@@ -13,3 +13,4 @@ export * from './common/constants/common.enum';
 export * from './common/exceptions/http-exception.filter';
 export * from './common/interceptor/response.interceptor';
 // export * from './common/interceptor/auth.interceptor';
+export * from './common/guards/jwt-auth.guard';

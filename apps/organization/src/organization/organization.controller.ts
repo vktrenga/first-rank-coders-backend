@@ -1,12 +1,12 @@
 import { Controller, Get, Post, Put, Delete, Body, Param, NotFoundException, UseGuards, Req } from '@nestjs/common';
 import { OrganizationService } from './organization.service';
 import { CreateOrganizationDto } from './dto/create-organization.dto';
-import { BaseResponse, AuthRole, Roles, JwtAuthGuard, } from '@firstrankcoders/shared';
+import { BaseResponse,  JwtAuthGuard} from '@firstrankcoders/shared';
 import { Role } from '@prisma/client';
 import { ApiBearerAuth } from '@nestjs/swagger';
+import { Roles, RolesGuard } from '../guards/auth.guard';
 
-@Controller('organization')
-// @UseGuards(RolesGuard)
+@Controller('organizations')
 export class OrganizationController {
   constructor(private readonly organizationService: OrganizationService) {}
 
@@ -28,9 +28,9 @@ export class OrganizationController {
 
   // @Roles(AuthRole.ADMIN, AuthRole.USER, AuthRole.STAFF)
   @ApiBearerAuth() // Add this above your controller class
-  @UseGuards(JwtAuthGuard)
-  @Roles(Role.ADMIN_STAFF, Role.SUPER_ADMIN, Role.ORG_MANAGEMENT, Role.ORG_STAFF)
   @Get()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.SUPER_ADMIN, Role.SUPER_ADMIN, Role.ORG_MANAGEMENT, Role.ORG_STAFF)
   async findAll(@Req() req: any): Promise<BaseResponse> {
     const user = req.user;
     const organizations = await this.organizationService.findAll(user);

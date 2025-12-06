@@ -11,6 +11,7 @@ export class RolesGuard implements CanActivate {
 
 	canActivate(context: ExecutionContext): boolean {
 		// Ensure reflector is injected by NestJS DI
+		console.log('local Reflector:', this.reflector);
 		if (!this.reflector) {
 			throw new Error('Reflector is not injected. Ensure RolesGuard is provided by NestJS DI.');
 		}

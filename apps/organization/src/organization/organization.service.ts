@@ -7,7 +7,11 @@ import {
 } from '@firstrankcoders/shared';
 import { CreateOrganizationDto } from './dto/create-organization.dto';
 import { ApiClientService } from '../utils/api-client.service';
-import { Role } from '@prisma/client';
+// Define Role enum locally since '@prisma/client' does not export it
+export enum Role {
+  ORG_ADMIN = 'ORG_ADMIN',
+  // Add other roles as needed
+}
 
 @Injectable()
 export class OrganizationService {

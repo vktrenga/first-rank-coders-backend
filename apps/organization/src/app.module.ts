@@ -3,6 +3,7 @@ import { OrganizationModule } from './organization/organization.module';
 import { ConfigModule } from '@nestjs/config';
 import { PrismaModule } from '@firstrankcoders/shared';
 import { OrganizationController } from './organization/organization.controller';
+import { RolesGuard } from './guards/auth.guard';
 
 @Module({
   imports: [
@@ -12,6 +13,6 @@ import { OrganizationController } from './organization/organization.controller';
     
   ],
   controllers: [OrganizationController],
-  providers: [],  
+  providers: [RolesGuard],  
 })
 export class AppModule {}

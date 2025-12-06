@@ -10,7 +10,8 @@ import {
   AppLogger,
   ResponseInterceptor,
   ValidationException,
-  AllExceptionsFilter
+  AllExceptionsFilter,
+  JwtAuthGuard
 } from '@firstrankcoders/shared';
 
 
