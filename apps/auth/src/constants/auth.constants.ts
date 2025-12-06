@@ -13,13 +13,4 @@ export const ERROR_MESSAGES = {
   PASSWORD_TOO_LONG: `Password must be at most ${PASSWORD_MAX_LENGTH} characters`,
 };
 
-export enum AuthRole {
-  ADMIN = 'ADMIN',
-  USER = 'USER',
-  STAFF = 'STAFF',
-  STUDENT = 'STUDENT',
-  HOD = 'HOD',
-  PRINCIPAL = 'PRINCIPAL',
-  HR = 'HR',
-  RECRUITER = 'RECRUITER',
-}
+

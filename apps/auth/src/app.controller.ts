@@ -1,4 +1,4 @@
-import { Controller, Post, Body, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Body, HttpCode, HttpStatus, Delete } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { AppService } from './app.service';
 import { SignupDto } from './dto/signup.dto';
@@ -83,5 +83,13 @@ export class AppController {
   @ApiResponse({ status: 200, description: 'Token refreshed successfully' })
   async authenticateWithRefreshToken(@Body() dto: RefreshTokenDto) {
     return this.appService.authenticateWithRefreshToken(dto.refreshToken);
+  }
+
+  @Delete(':userId')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Delete user by ID' })
+  @ApiResponse({ status: 200, description: 'User deleted successfully' })
+  async deleteUser(@Body('userId') userId: string) {
+    return this.appService.deleteUser(userId);
   }
 }

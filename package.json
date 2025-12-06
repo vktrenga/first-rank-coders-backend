@@ -16,6 +16,7 @@
     "start:user": "npm run start -w apps/user",
     "start:auth": "npm run start -w apps/auth",
     "start:org": "npm run start -w apps/organization",
+    "build:org": "npm run build:libs && npm run build -w apps/organization",
     "dev:org": "npm run start:dev -w apps/organization",
     "start:contest": "npm run start -w apps/contest",
     "test": "npm run test -w apps/user",
@@ -23,6 +24,7 @@
     "install:all": "npm install && npm run build:libs"
   },
   "devDependencies": {
+    "prisma": "^6.19.0",
     "rimraf": "^5.0.5"
   },
   "dependencies": {
@@ -30,7 +32,6 @@
     "@nestjs/swagger": "^11.2.1",
     "@prisma/client": "^6.19.0",
     "dotenv": "^17.2.3",
-    "prisma": "^6.19.0",
     "swagger-ui-express": "^5.0.1"
   }
 }

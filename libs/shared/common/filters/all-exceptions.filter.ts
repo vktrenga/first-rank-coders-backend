@@ -15,26 +15,35 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
 
+    // Log the error for debugging
+    // You can inject a logger here if needed
+    // console.error(exception);
+
     const status =
       exception instanceof HttpException
         ? exception.getStatus()
         : HttpStatus.INTERNAL_SERVER_ERROR;
 
-    const errorResponse =
+    let errorResponse: any =
       exception instanceof HttpException
         ? exception.getResponse()
-        : { message: exception.message || 'Internal Server Error' };
+        : { message: exception?.message || 'Internal Server Error' };
+
+    // If errorResponse is a string, wrap it in an object
+    if (typeof errorResponse === 'string') {
+      errorResponse = { message: errorResponse };
+    }
+
+    // Extract errorCode if present
+    const errorCode = errorResponse.errorCode || exception?.errorCode;
 
     response.status(status).json(
       BaseResponse.error(
-        typeof errorResponse === 'string'
-          ? errorResponse
-          : (errorResponse as any).message || 'Something went wrong',
+        errorResponse.message || 'Something went wrong',
         {
-          path: request.url,
-          timestamp: new Date().toISOString(),
-          ...(typeof errorResponse === 'object' ? errorResponse : {}),
+          ...errorResponse,
         },
+        errorCode
       ),
     );
   }

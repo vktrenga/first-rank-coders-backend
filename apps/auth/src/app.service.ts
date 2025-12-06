@@ -86,7 +86,7 @@ export class AppService {
       });
 
       if (existingUser) {
-        return BaseResponse.error(ERROR_MESSAGES.USER_EXISTS, null);
+        return BaseResponse.error(ERROR_MESSAGES.USER_EXISTS, null, 'AUTH_USER_EXISTS');
       }
 
       // Hash the password
@@ -118,15 +118,15 @@ export class AppService {
       );
     } catch (error) {
       if (error instanceof BadRequestException) {
-        return BaseResponse.error(error.message, null);
+        return BaseResponse.error(error.message, null, 'AUTH_BAD_REQUEST');
       }
       if (
         error instanceof PrismaClientKnownRequestError &&
         error.code === 'P2002'
       ) {
-        return BaseResponse.error('User with this email already exists', null);
+        return BaseResponse.error('User with this email already exists', null, 'AUTH_USER_EXISTS');
       }
-      return BaseResponse.error('Signup failed', null);
+      return BaseResponse.error('Signup failed', null, 'AUTH_SIGNUP_FAILED');
     }
   }
 
@@ -144,7 +144,7 @@ export class AppService {
       });
 
       if (!authUser) {
-        return BaseResponse.error(ERROR_MESSAGES.INVALID_CREDENTIALS, null);
+        return BaseResponse.error(ERROR_MESSAGES.INVALID_CREDENTIALS, null, 'AUTH_INVALID_CREDENTIALS');
       }
 
       // Verify password
@@ -166,8 +166,15 @@ export class AppService {
       });
            
       // Create access token with authUser.id
+      // Fetch user details
+      const userDetails = await this.prisma.user.findUnique({
+        where: { authUserId: authUser.id },
+      });
+      if (!userDetails) {
+        return BaseResponse.error(ERROR_MESSAGES.EMAIL_NOT_VERIFIED, null, 'AUTH_EMAIL_NOT_VERIFIED');
+      }
       const accessToken = jwt.sign(
-        { authId: authUser.id, email: authUser.email },
+        { authId: authUser.id, email: authUser.email, role: userDetails.role , organizationId: userDetails.organizationId },
         process.env.JWT_SECRET || 'default_secret',
         { expiresIn: AUTH_TOKEN_EXPIRY }
       );
@@ -194,9 +201,9 @@ export class AppService {
       );
     } catch (error) {
       if (error instanceof UnauthorizedException) {
-        return BaseResponse.error(error.message, null);
+        return BaseResponse.error(error.message, null, 'AUTH_UNAUTHORIZED');
       }
-      return BaseResponse.error('Login failed', null);
+      return BaseResponse.error('Login failed', null, 'AUTH_LOGIN_FAILED');
     }
   }
 
@@ -256,10 +263,10 @@ export class AppService {
       });
 
       if (!authUser) {
-        return BaseResponse.error('User not found', null);
+        return BaseResponse.error('User not found', null, 'AUTH_USER_NOT_FOUND');
       }
       if (authUser.refreshToken !== refreshToken) {
-        return BaseResponse.error(ERROR_MESSAGES.INVALID_CREDENTIALS, null);
+        return BaseResponse.error(ERROR_MESSAGES.INVALID_CREDENTIALS, null, 'AUTH_INVALID_REFRESH_TOKEN');
       }
 
       // Issue new access token
@@ -278,7 +285,16 @@ export class AppService {
         'Authenticated with refresh token'
       );
     } catch (error) {
-      return BaseResponse.error('Invalid or expired refresh token', null);
+      return BaseResponse.error('Invalid or expired refresh token', null, 'AUTH_REFRESH_TOKEN_EXPIRED');
+    }
+  }
+  async deleteUser(userId: string) {
+    this.logger.log('Deleting user', userId);
+    try {
+      await this.prisma.auth.delete({ where: { id: userId } });
+      return BaseResponse.success(null, 'User deleted successfully');
+    } catch (error) {
+      return BaseResponse.error('User deletion failed', null, 'AUTH_USER_DELETE_FAILED');
     }
   }
 }

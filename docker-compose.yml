@@ -3,50 +3,50 @@ services:
   # ============================
   # User Service
   # ============================
-  user-service:
-    build:
-      context: .
-      dockerfile: apps/user/Dockerfile
-    container_name: user
-    ports:
-      - "3002:3000"
-    env_file:
-      - ./apps/user/.env
-    depends_on:
-      - postgres
-    restart: always
+  # user-service:
+  #   build:
+  #     context: .
+  #     dockerfile: apps/user/Dockerfile
+  #   container_name: user
+  #   ports:
+  #     - "3002:3000"
+  #   env_file:
+  #     - ./apps/user/.env
+  #   depends_on:
+  #     - postgres
+  #   restart: always
 
   # ============================
   # Auth Service
   # ============================
-  auth-service:
-    build:
-      context: .
-      dockerfile: apps/auth/Dockerfile
-    container_name: auth-service
-    ports:
-      - "3001:3000"
-    env_file:
-      - ./apps/auth/.env
-    depends_on:
-      - postgres
-    restart: always
+  # auth-service:
+  #   build:
+  #     context: .
+  #     dockerfile: apps/auth/Dockerfile
+  #   container_name: auth-service
+  #   ports:
+  #     - "3001:3000"
+  #   env_file:
+  #     - ./apps/auth/.env
+  #   depends_on:
+  #     - postgres
+  #   restart: always
 
   # ============================
   # Contest Service
   # ============================
-  contest-service:
-    build:
-      context: .
-      dockerfile: apps/contest/Dockerfile
-    container_name: contest-service
-    ports:
-      - "3003:3000"
-    env_file:
-      - ./apps/contest/.env 
-    depends_on:
-      - postgres
-    restart: always
+  # contest-service:
+  #   build:
+  #     context: .
+  #     dockerfile: apps/contest/Dockerfile
+  #   container_name: contest-service
+  #   ports:
+  #     - "3003:3000"
+  #   env_file:
+  #     - ./apps/contest/.env 
+  #   depends_on:
+  #     - postgres
+  #   restart: always
 
   # ============================
   # PostgreSQL Database docker run --name postgres-db -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=frc -p 5432:5432 -d postgres:16

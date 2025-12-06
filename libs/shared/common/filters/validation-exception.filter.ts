@@ -10,7 +10,7 @@ export class ValidationExceptionFilter implements ExceptionFilter {
     const validationErrors = exception.getResponse() as any;
 
     response.status(400).json(
-      BaseResponse.error('Validation failed', validationErrors.message || validationErrors),
+      BaseResponse.error('Validation failed', validationErrors.errors || validationErrors),
     );
   }
 }

@@ -28,7 +28,7 @@ export class UserService {
         }
         createData.organizationId = org.id;
       }
-
+      console.log('USer createData',createData)
       const user = await this.prisma.user.create({ data: createData });
       return BaseResponse.success(user, 'User created successfully');
     } catch (error) {

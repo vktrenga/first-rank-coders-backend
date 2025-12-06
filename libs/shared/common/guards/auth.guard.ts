@@ -1,6 +1,6 @@
-import { AuthRole } from '../constants/common.enum';
 import { Injectable, CanActivate, ExecutionContext, UnauthorizedException, ForbiddenException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+import { Role } from '@prisma/client';
 import * as jwt from 'jsonwebtoken';
 // You may need to adjust the import path for AuthRole enum
 // or update the path to where auth-role.enum.ts actually exists
@@ -12,6 +12,7 @@ export class JwtAuthGuard implements CanActivate {
 	canActivate(context: ExecutionContext): boolean {
 		const request = context.switchToHttp().getRequest();
 		const authHeader = request.headers['authorization'];
+		console.log('Authorization Header:', request);
 		if (!authHeader || !authHeader.startsWith('Bearer ')) {
 			throw new UnauthorizedException('Missing or invalid Authorization header');
 		}
@@ -26,7 +27,7 @@ export class JwtAuthGuard implements CanActivate {
 	}
 }
 
-export function Roles(...roles: AuthRole[]) {
+export function Roles(...roles: Role[]) {
 	return (target: any, key?: any, descriptor?: any) => {
 		Reflect.defineMetadata('roles', roles, descriptor.value);
 	};
@@ -37,7 +38,7 @@ export class RolesGuard implements CanActivate {
 	constructor(private reflector: Reflector) {}
 
 	canActivate(context: ExecutionContext): boolean {
-		const roles = this.reflector.get<AuthRole[]>('roles', context.getHandler());
+		const roles = this.reflector.get<Role[]>('roles', context.getHandler());
 		if (!roles || roles.length === 0) return true;
 		const request = context.switchToHttp().getRequest();
 		const user = request.user;

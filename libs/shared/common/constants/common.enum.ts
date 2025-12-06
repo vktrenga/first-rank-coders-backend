@@ -7,4 +7,5 @@ export enum AuthRole {
   PRINCIPAL = 'PRINCIPAL',
   HR = 'HR',
   RECRUITER = 'RECRUITER',
+  ORG_ADMIN = 'ORG_ADMIN',
 }
