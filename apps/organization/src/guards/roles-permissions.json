@@ -1,0 +1,51 @@
+{
+  "roles": {
+    "ADMIN": {
+      "description": "System administrator with full access",
+      "permissions": [
+        "org:create",
+        "org:update",
+        "org:delete",
+        "org:view",
+        "user:create",
+        "user:update",
+        "user:delete",
+        "user:view",
+        "process:create",
+        "process:update",
+        "process:delete",
+        "process:view"
+      ]
+    },
+    "ORG_ADMIN": {
+      "description": "Organization admin with access to manage own org",
+      "permissions": [
+        "org:update",
+        "org:view",
+        "org:list",
+        "user:create",
+        "user:update",
+        "user:view",
+        "process:create",
+        "process:update",
+        "process:view"
+      ]
+    },
+
+    "LEADER": {
+      "description": "Team leader with limited management permissions",
+      "permissions": [
+        "user:view",
+        "process:view",
+        "process:update"
+      ]
+    },
+
+    "STUDENT": {
+      "description": "Basic user with minimal access",
+      "permissions": [
+        "process:view"
+      ]
+    }
+  }
+}

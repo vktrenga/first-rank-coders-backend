@@ -1,28 +1,30 @@
-import { Injectable, BadRequestException, UnauthorizedException } from '@nestjs/common';
-import { PrismaService, BaseResponse } from '@firstrankcoders/shared';
+import { Injectable, BadRequestException, UnauthorizedException, HttpStatus } from '@nestjs/common';
+import { PrismaService, AppException } from '@firstrankcoders/shared';
 import * as bcrypt from 'bcryptjs';
 import { SignupDto } from './dto/signup.dto';
 import { LoginDto } from './dto/login.dto';
-import { AppLogger, MaskService } from '@firstrankcoders/shared/';
+import { AppLogger } from '@firstrankcoders/shared/';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/binary';
 import { AUTH_REFRESH_TOKEN_EXPIRY, AUTH_TOKEN_EXPIRY, ERROR_MESSAGES } from './constants/auth.constants';
 import jwt from 'jsonwebtoken';
 
 @Injectable()
-export class AppService {
+export class AuthService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly logger: AppLogger,
-    private readonly maskService: MaskService,
-  ) {}
+  ) {
+    this.logger.setContext(AuthService.name); 
+  }
   /**
    * Request password reset (send email with token)
    */
   async resetPassword(email: string) {
     // TODO: Generate password reset token and send email
     // Example: const token = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: '1h' });
-    // Save token to DB or send via email
-    return BaseResponse.success(null, `Password reset link sent to ${email}`);
+    // Save token to DB or send via emailr
+    return  `Password reset link sent to ${email}`
+
   }
 
   /**
@@ -49,7 +51,7 @@ export class AppService {
     //   where: { authUserId: userId },
     //   data: { password: hashedPassword },
     // });
-    return BaseResponse.success(null, 'Password changed successfully');
+    return  `Password changed successfully`
   }
 
   /**
@@ -61,15 +63,15 @@ export class AppService {
       const payload = jwt.verify(token, process.env.JWT_SECRET || 'default_secret') as { email: string };
       const authUser = await this.prisma.auth.findUnique({ where: { email: payload.email } });
       if (!authUser) {
-        return BaseResponse.error('Invalid token or user not found', null);
+          return  `Invalid token or user not found`
       }
       await this.prisma.auth.update({
         where: { email: payload.email },
         data: { isEmailVerified: true },
       });
-      return BaseResponse.success(null, 'Email verified successfully');
+      return  `Email verified successfully`;
     } catch (error) {
-      return BaseResponse.error('Invalid or expired verification token', null);
+      return  `Invalid or expired verification token`;
     }
   }
   
@@ -78,7 +80,7 @@ export class AppService {
    * Sign up a new user with email and password
    */
   async signup(signupDto: SignupDto) {
-  this.logger.log('Signup attempt', this.maskService.maskEmail(signupDto.email));
+  this.logger.log('Signup Started');
     try {
       const { email, password } = signupDto;
       const existingUser = await this.prisma.auth.findUnique({
@@ -86,7 +88,8 @@ export class AppService {
       });
 
       if (existingUser) {
-        return BaseResponse.error(ERROR_MESSAGES.USER_EXISTS, null);
+        console.log('User already exists with email:', email);
+        throw new AppException(ERROR_MESSAGES.USER_EXISTS, HttpStatus.CONFLICT, null, 'AUTH_USER_EXISTS');
       }
 
       // Hash the password
@@ -106,27 +109,14 @@ export class AppService {
           loginAttempts: 0,
         },
       });
-
+      this.logger.log('Signup End');
       // TODO: Send verification email here (e.g., with a token link)
-
-      return BaseResponse.success(
-        {
-          userId: authUser.id,
+      return {
+          authId: authUser.id,
           email: authUser.email,
-        },
-        'Signup completed successfully. Please verify your email.',
-      );
+        };
     } catch (error) {
-      if (error instanceof BadRequestException) {
-        return BaseResponse.error(error.message, null);
-      }
-      if (
-        error instanceof PrismaClientKnownRequestError &&
-        error.code === 'P2002'
-      ) {
-        return BaseResponse.error('User with this email already exists', null);
-      }
-      return BaseResponse.error('Signup failed', null);
+      throw error;
     }
   }
 
@@ -144,7 +134,7 @@ export class AppService {
       });
 
       if (!authUser) {
-        return BaseResponse.error(ERROR_MESSAGES.INVALID_CREDENTIALS, null);
+        throw new AppException(ERROR_MESSAGES.AUTH_USER_NOT_FOUND, HttpStatus.CONFLICT, null, 'AUTH_USER_NOT_FOUND');
       }
 
       // Verify password
@@ -155,8 +145,8 @@ export class AppService {
           where: { id: authUser.id },
           data: { loginAttempts: authUser.loginAttempts + 1 },
         });
+        throw new AppException(ERROR_MESSAGES.AUTH_INVALID_CREDENTIALS, HttpStatus.CONFLICT, null, 'AUTH_INVALID_CREDENTIALS');
 
-        return BaseResponse.error(ERROR_MESSAGES.INVALID_CREDENTIALS, null);
       }
 
       // Reset login attempts on successful login
@@ -166,8 +156,15 @@ export class AppService {
       });
            
       // Create access token with authUser.id
+      // Fetch user details
+      const userDetails = await this.prisma.user.findUnique({
+        where: { authUserId: authUser.id },
+      });
+      if (!userDetails) {
+        throw new AppException(ERROR_MESSAGES.AUTH_EMAIL_NOT_VERIFIED, HttpStatus.CONFLICT, null, 'AUTH_EMAIL_NOT_VERIFIED');
+      }
       const accessToken = jwt.sign(
-        { authId: authUser.id, email: authUser.email },
+        { authId: authUser.id, email: authUser.email, role: userDetails.role , organizationId: userDetails.organizationId },
         process.env.JWT_SECRET || 'default_secret',
         { expiresIn: AUTH_TOKEN_EXPIRY }
       );
@@ -183,20 +180,16 @@ export class AppService {
         data: { refreshToken },
       });
 
-      return BaseResponse.success(
-        {
+      
+       return {
           userId: authUser.id,
           email: authUser.email,
           accessToken,
           refreshToken,
-        },
-        'Login successful'
-      );
+        }
+      
     } catch (error) {
-      if (error instanceof UnauthorizedException) {
-        return BaseResponse.error(error.message, null);
-      }
-      return BaseResponse.error('Login failed', null);
+      throw error;
     }
   }
 
@@ -256,10 +249,11 @@ export class AppService {
       });
 
       if (!authUser) {
-        return BaseResponse.error('User not found', null);
+        throw  new AppException(ERROR_MESSAGES.AUTH_USER_NOT_FOUND, HttpStatus.CONFLICT, null, 'AUTH_USER_NOT_FOUND');
       }
       if (authUser.refreshToken !== refreshToken) {
-        return BaseResponse.error(ERROR_MESSAGES.INVALID_CREDENTIALS, null);
+        throw  new AppException(ERROR_MESSAGES.INVALID_CREDENTIALS, HttpStatus.CONFLICT, null, 'AUTH_INVALID_CREDENTIALS');
+
       }
 
       // Issue new access token
@@ -269,16 +263,23 @@ export class AppService {
         { expiresIn: AUTH_TOKEN_EXPIRY }
       );
 
-      return BaseResponse.success(
-        {
+      return {
           userId: authUser.id,
           email: authUser.email,
           accessToken,
-        },
-        'Authenticated with refresh token'
-      );
+        }
     } catch (error) {
-      return BaseResponse.error('Invalid or expired refresh token', null);
+      throw error
+    }
+  }
+  async deleteUser(userId: string) {
+    this.logger.log('Deleting user', userId);
+    try {
+      await this.prisma.auth.delete({ where: { id: userId } });
+      return 'User deleted successfully'
+    } catch (error) {
+        throw  new AppException(ERROR_MESSAGES.AUTH_DELETE_FAILED, HttpStatus.CONFLICT, null, 'AUTH_DELETE_FAILED');
+
     }
   }
 }

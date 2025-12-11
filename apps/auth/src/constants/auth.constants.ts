@@ -11,15 +11,12 @@ export const ERROR_MESSAGES = {
   EMAIL_NOT_VERIFIED: 'Email not verified',
   PASSWORD_TOO_SHORT: `Password must be at least ${PASSWORD_MIN_LENGTH} characters`,
   PASSWORD_TOO_LONG: `Password must be at most ${PASSWORD_MAX_LENGTH} characters`,
+  AUTH_USER_EXISTS: 'User with this email already exists',
+  AUTH_USER_NOT_FOUND: 'User not found',
+  AUTH_INVALID_CREDENTIALS: 'Invalid credentials',
+  AUTH_EMAIL_NOT_VERIFIED: 'Email not verified',
+  AUTH_DELETE_FAILED: 'User deletion failed',
+
 };
 
-export enum AuthRole {
-  ADMIN = 'ADMIN',
-  USER = 'USER',
-  STAFF = 'STAFF',
-  STUDENT = 'STUDENT',
-  HOD = 'HOD',
-  PRINCIPAL = 'PRINCIPAL',
-  HR = 'HR',
-  RECRUITER = 'RECRUITER',
-}
+
