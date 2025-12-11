@@ -1,20 +1,18 @@
-import { Prisma } from '@prisma/client';
-import { IsString, IsEmail, IsEnum, IsOptional, IsUUID } from 'class-validator';
+import { Role } from '@prisma/client';
+import { IsString, IsEmail,  IsOptional, IsUUID, IsEnum } from 'class-validator';
 
-// export class CreateUserDto  implements Prisma.UserCreateInput {
-//   name: string;
-//   email: string;
-//   password: string;
-//   role: Role;
-//   organizationId?: string;
-//   departmentId?: string;
-//   classId?: string;
-// }
 export class CreateUserDto {
   @IsString()
   name: string;
-    
+
+  @IsEmail()
+  email: string;
+
   @IsOptional()
+  password: string;
+
+  @IsOptional()
+  @IsEnum(Role, { message: 'role must be a valid Role enum value' })
   role: string;
 
   @IsOptional()
@@ -28,4 +26,8 @@ export class CreateUserDto {
   @IsOptional()
   @IsUUID()
   classId?: string;
+
+  @IsOptional()
+  @IsUUID()
+  authUserId?: string;
 }

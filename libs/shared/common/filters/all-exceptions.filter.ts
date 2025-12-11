@@ -6,7 +6,6 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
-import { BaseResponse } from '../responses/base.response';
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
@@ -37,14 +36,14 @@ export class AllExceptionsFilter implements ExceptionFilter {
     // Extract errorCode if present
     const errorCode = errorResponse.errorCode || exception?.errorCode;
 
-    response.status(status).json(
-      BaseResponse.error(
-        errorResponse.message || 'Something went wrong',
-        {
-          ...errorResponse,
-        },
-        errorCode
-      ),
-    );
+    // response.status(status).json(
+    //   BaseResponse.error(
+    //     errorResponse.message || 'Something went wrong',
+    //     {
+    //       ...errorResponse,
+    //     },
+    //     errorCode
+    //   ),
+    // );
   }
 }

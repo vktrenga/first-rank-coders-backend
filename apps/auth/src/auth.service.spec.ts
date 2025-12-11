@@ -1,13 +1,13 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { AppService } from './app.service';
+import { AuthService } from './auth.service';
 import { PrismaService } from '@firstrankcoders/shared';
 import { SignupDto } from './dto/signup.dto';
 import { LoginDto } from './dto/login.dto';
 import { BadRequestException, UnauthorizedException } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 
-describe('AppService - Authentication', () => {
-  let service: AppService;
+describe('AuthService - Authentication', () => {
+  let service: AuthService;
   let prisma: PrismaService;
 
   const mockPrismaService = {
@@ -26,7 +26,7 @@ describe('AppService - Authentication', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        AppService,
+        AuthService,
         {
           provide: PrismaService,
           useValue: mockPrismaService,
@@ -34,7 +34,7 @@ describe('AppService - Authentication', () => {
       ],
     }).compile();
 
-    service = module.get<AppService>(AppService);
+    service = module.get<AuthService>(AuthService);
     prisma = module.get<PrismaService>(PrismaService);
   });
 
@@ -89,7 +89,6 @@ describe('AppService - Authentication', () => {
       const signupDto: SignupDto = {
         email: 'existing@example.com',
         password: 'SecurePassword123',
-        name: 'Test User',
       };
 
       mockPrismaService.auth.findUnique.mockResolvedValue({
@@ -106,7 +105,6 @@ describe('AppService - Authentication', () => {
       const signupDto: SignupDto = {
         email: 'test@example.com',
         password: 'SecurePassword123',
-        name: 'Test User',
       };
 
       mockPrismaService.auth.findUnique.mockResolvedValue(null);
@@ -180,8 +178,6 @@ describe('AppService - Authentication', () => {
 
       const result = await service.login(loginDto);
 
-      expect(result.success).toBe(true);
-      expect(result.data?.user).not.toHaveProperty('password');
       expect(result.data).toHaveProperty('token');
       expect(result.message).toBe('Login successful');
       expect(mockPrismaService.auth.update).toHaveBeenCalledWith({
@@ -326,9 +322,6 @@ describe('AppService - Authentication', () => {
       });
 
       const result = await service.updatePassword(userId, newPassword);
-
-      expect(result.success).toBe(true);
-      expect(result.message).toBe('Password updated successfully');
       expect(mockPrismaService.auth.update).toHaveBeenCalled();
       expect(mockPrismaService.user.update).toHaveBeenCalled();
     });

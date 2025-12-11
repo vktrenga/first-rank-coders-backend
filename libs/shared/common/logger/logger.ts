@@ -1,19 +1,30 @@
-import { LoggerService } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 
-export class AppLogger implements LoggerService {
-  log(message: string, ...optionalParams: any[]) {
-    console.log(`[LOG]`, message, ...optionalParams);
+@Injectable()
+export class AppLogger extends Logger {
+  private customContext: string = 'AppLogger';
+
+  setContext(context: string) {
+    this.customContext = context;
   }
-  error(message: string, ...optionalParams: any[]) {
-    console.error(`[ERROR]`, message, ...optionalParams);
+
+  log(message: any, ...optionalParams: any[]) {
+    super.log(message, this.customContext, ...optionalParams);
   }
-  warn(message: string, ...optionalParams: any[]) {
-    console.warn(`[WARN]`, message, ...optionalParams);
+
+  error(message: any, ...optionalParams: any[]) {
+    super.error(message, this.customContext, ...optionalParams);
   }
-  debug(message: string, ...optionalParams: any[]) {
-    console.debug(`[DEBUG]`, message, ...optionalParams);
+
+  warn(message: any, ...optionalParams: any[]) {
+    super.warn(message, this.customContext, ...optionalParams);
   }
-  verbose(message: string, ...optionalParams: any[]) {
-    console.info(`[VERBOSE]`, message, ...optionalParams);
+
+  debug(message: any, ...optionalParams: any[]) {
+    super.debug(message, this.customContext, ...optionalParams);
+  }
+
+  verbose(message: any, ...optionalParams: any[]) {
+    super.verbose(message, this.customContext, ...optionalParams);
   }
 }

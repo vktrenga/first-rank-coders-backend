@@ -5,8 +5,8 @@ export class ResponseInterceptor implements NestInterceptor {
   intercept(context: ExecutionContext, next: CallHandler) {
     return next.handle().pipe(
       map((baseResponse) => ({
-        success: true,
-        data: baseResponse.data,
+        status: true,
+        data: baseResponse.data || baseResponse,
         message: baseResponse.message || 'Request successful',
         timestamp: new Date().toISOString(),
       })),

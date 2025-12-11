@@ -4,14 +4,14 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import { ValidationPipe } from '@nestjs/common';
 import {
-  BaseResponse,
   AppException,
   PrismaService,
   AppLogger,
   ResponseInterceptor,
   ValidationException,
   AllExceptionsFilter,
-  JwtAuthGuard
+  JwtAuthGuard,
+  HttpExceptionFilter
 } from '@firstrankcoders/shared';
 
 
@@ -21,7 +21,7 @@ async function bootstrap() {
   const port = configService.get('PORT');
 
   // Use improved AppExceptionFilter for global exception handling
-  app.useGlobalFilters(new AllExceptionsFilter());
+  app.useGlobalFilters(new HttpExceptionFilter());
   app.useGlobalInterceptors(new ResponseInterceptor());
   app.useGlobalPipes(
     new ValidationPipe({

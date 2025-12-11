@@ -1,17 +1,19 @@
 import { Controller, Post, Body, HttpCode, HttpStatus, Delete } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
-import { AppService } from './app.service';
+import { AuthService } from './auth.service';
 import { SignupDto } from './dto/signup.dto';
 import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { VerifyEmailDto } from './dto/verify-email.dto';
+import { Auth } from '@prisma/client';
 
 @ApiTags('Auth')
 @Controller('auth')
-export class AppController {
-  constructor(private readonly appService: AppService) {}
+export class AuthController {  
+  constructor(private readonly authService: AuthService) {
+  }
 
   /**
    * Register a new user
@@ -22,7 +24,7 @@ export class AppController {
   @ApiOperation({ summary: 'Register a new user' })
   @ApiResponse({ status: 201, description: 'User registered successfully' })
   async signup(@Body() signupDto: SignupDto) {
-    return this.appService.signup(signupDto);
+    return this.authService.signup(signupDto);
   }
 
   /**
@@ -34,7 +36,7 @@ export class AppController {
   @ApiOperation({ summary: 'Login user and get tokens' })
   @ApiResponse({ status: 200, description: 'Login successful' })
   async login(@Body() loginDto: LoginDto) {
-    return this.appService.login(loginDto);
+    return this.authService.login(loginDto);
   }
 /**
  * Request password reset
@@ -45,7 +47,7 @@ export class AppController {
   @ApiOperation({ summary: 'Request password reset' })
   @ApiResponse({ status: 200, description: 'Password reset link sent' })
   async resetPassword(@Body() dto: ResetPasswordDto) {
-    return this.appService.resetPassword(dto.email);
+    return this.authService.resetPassword(dto.email);
   }
 
 /**
@@ -58,7 +60,7 @@ export class AppController {
   @ApiOperation({ summary: 'Change password' })
   @ApiResponse({ status: 200, description: 'Password changed successfully' })
   async changePassword(@Body() dto: ChangePasswordDto) {
-    return this.appService.changePassword(dto.userId, dto.oldPassword, dto.newPassword);
+    return this.authService.changePassword(dto.userId, dto.oldPassword, dto.newPassword);
   }
 
 /**
@@ -70,7 +72,7 @@ export class AppController {
   @ApiOperation({ summary: 'Verify email address' })
   @ApiResponse({ status: 200, description: 'Email verified successfully' })
   async verifyEmail(@Body() dto: VerifyEmailDto) {
-    return this.appService.verifyEmail(dto.token);
+    return this.authService.verifyEmail(dto.token);
   }
 
   /**
@@ -82,7 +84,7 @@ export class AppController {
   @ApiOperation({ summary: 'Authenticate with refresh token' })
   @ApiResponse({ status: 200, description: 'Token refreshed successfully' })
   async authenticateWithRefreshToken(@Body() dto: RefreshTokenDto) {
-    return this.appService.authenticateWithRefreshToken(dto.refreshToken);
+    return this.authService.authenticateWithRefreshToken(dto.refreshToken);
   }
 
   @Delete(':userId')
@@ -90,6 +92,6 @@ export class AppController {
   @ApiOperation({ summary: 'Delete user by ID' })
   @ApiResponse({ status: 200, description: 'User deleted successfully' })
   async deleteUser(@Body('userId') userId: string) {
-    return this.appService.deleteUser(userId);
+    return this.authService.deleteUser(userId);
   }
 }

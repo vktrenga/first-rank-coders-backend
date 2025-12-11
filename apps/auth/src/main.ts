@@ -1,14 +1,32 @@
 import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
+import { AuthModule } from './auth.module';
 import { ConfigService } from '@nestjs/config';
 import { ValidationPipe } from '@nestjs/common';
+import {  HttpExceptionFilter, ResponseInterceptor, ValidationException } from '@firstrankcoders/shared';
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AuthModule);
   const configService = app.get(ConfigService);
   const port = configService.get('PORT');
 
-  app.useGlobalPipes(new ValidationPipe());
 
+  // Use improved AppExceptionFilter for global exception handling
+  app.useGlobalFilters(new HttpExceptionFilter());
+  app.useGlobalInterceptors(new ResponseInterceptor());
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true, // Remove properties not in DTO
+      forbidNonWhitelisted: false,
+      transform: true, // Auto-convert types
+      exceptionFactory: (errors) => {
+        const formattedErrors = errors.map((err) => ({
+          field: err.property,
+          errors: Object.values(err.constraints ?? {}),
+        }));
+
+        throw new ValidationException(formattedErrors);
+      },
+    }),
+  );
 
   // Swagger setup
   if (process.env.NODE_ENV !== 'production') {
@@ -23,8 +41,6 @@ async function bootstrap() {
     SwaggerModule.setup('api', app, document);
     console.log('Swagger docs available at /api');
   }
-  // Note: Please install "class-transformer" to fully utilize ValidationPipe:
-  // npm install class-transformer
 
   console.log(`App running on port: ${port}`);
   await app.listen(configService.get('PORT') ?? 3000);
