@@ -1,0 +1,94 @@
+model Department {
+  id             String   @id @default(uuid())
+  name           String
+  code           String?
+  organizationId String
+  headId         String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  classes      Class[]
+  head         User?        @relation("DepartmentHead", fields: [headId], references: [id])
+  users        User[]
+}
+// ========== CLASS ==========
+model Class {
+  id             String   @id @default(uuid())
+  name           String
+  section        String?
+  semester       Int?
+  departmentId   String
+  classTeacherId String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  department   Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  classTeacher User?      @relation("ClassTeacher", fields: [classTeacherId], references: [id])
+  students     User[]     @relation("ClassStudents")
+}
+
+// ========== SECTION ==========
+model Section {
+  id        String        @id @default(uuid())
+  classId   String
+  name      String
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  class     Class         @relation(fields: [classId], references: [id])
+  enrollments StudentClassEnrollment[]
+}
+
+// ========== ACADEMIC YEAR ==========
+model AcademicYear {
+  id             String        @id @default(uuid())
+  organizationId String
+  startYear      Int
+  endYear        Int
+  status         String        @default("ACTIVE")
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  enrollments  StudentClassEnrollment[]
+}
+
+// ========== STUDENT PROFILE ==========
+model StudentProfile {
+  id              String        @id @default(uuid())
+  userId          String        // from User microservice
+  organizationId  String
+  departmentId    String
+  admissionNo     String?
+  admissionDate   DateTime?
+  status          String        @default("ACTIVE")
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  department   Department   @relation(fields: [departmentId], references: [id])
+  enrollments  StudentClassEnrollment[]
+
+  @@unique([userId, organizationId])
+}
+
+// ========== STUDENT CLASS ENROLLMENT (Batch Table) ==========
+model StudentClassEnrollment {
+  id               String      @id @default(uuid())
+  studentId        String
+  classId          String
+  sectionId        String
+  academicYearId   String
+  rollNumber       String?
+  isPromoted       Boolean     @default(false)
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+
+  student       StudentProfile @relation(fields: [studentId],      references: [id])
+  class         Class          @relation(fields: [classId],        references: [id])
+  section       Section        @relation(fields: [sectionId],      references: [id])
+  academicYear  AcademicYear   @relation(fields: [academicYearId], references: [id])
+
+  @@unique([studentId, academicYearId])  // student can have only 1 class per year
+}

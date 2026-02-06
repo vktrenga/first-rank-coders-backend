@@ -6,85 +6,58 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
 model Auth {
-  id        String   @id @default(uuid())
-  email     String @unique
-  password  String 
-  refreshToken String
-  loginAttempts Int @default(0)
+  id              String  @id @default(uuid())
+  email           String  @unique
+  password        String
+  refreshToken    String
+  loginAttempts   Int     @default(0)
   isEmailVerified Boolean @default(false)
 }
+
 model Organization {
-  id            String        @id @default(uuid())
-  name          String
-  code          String? 
+  id   String  @id @default(uuid())
+  name String
+  code String?
 
   // Type: COLLEGE / COMPANY / SCHOOL / STARTUP / NGO …
-  type          OrgType       @default(COLLEGE)
+  type OrgType @default(COLLEGE)
 
   // Domain for email-based auto-join validation (optional)
-  domain        String?       @unique
+  domain String? @unique
 
   // Contact details
-  email         String?
-  phone         String?
-  website       String?
+  email   String?
+  phone   String?
+  website String?
 
   // Location
-  address       String?
-  city          String?
-  state         String?
-  country       String?
-  pincode       String?
+  address String?
+  city    String?
+  state   String?
+  country String?
+  pincode String?
 
   // Branding
   logoUrl       String?
   coverImageUrl String?
 
   // Subscription / Billing
- // plan          PlanType      @default(FREE)
- // planExpiresAt DateTime?
- // isActive      Boolean       @default(true)
+  // plan          PlanType      @default(FREE)
+  // planExpiresAt DateTime?
+  // isActive      Boolean       @default(true)
 
   // Audit fields
-  createdBy     String?  // userId or authId of who created the organization
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdBy String? // userId or authId of who created the organization
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
-  departments   Department[]
-  users         User[]
-}
-
-
-model Department {
-  id             String   @id @default(uuid())
-  name           String
-  code           String?
-  organizationId String
-  headId         String?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  classes      Class[]
-  head         User?        @relation("DepartmentHead", fields: [headId], references: [id])
-  users        User[]
-}
-
-model Class {
-  id             String   @id @default(uuid())
-  name           String
-  section        String?
-  semester       Int?
-  departmentId   String
-  classTeacherId String?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-
-  department   Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
-  classTeacher User?      @relation("ClassTeacher", fields: [classTeacherId], references: [id])
-  students     User[]     @relation("ClassStudents")
+  departments     Department[]
+  users           User[]
+  academicYears   AcademicYear[]
+  studentProfiles StudentProfile[]
 }
 
 model User {
@@ -100,12 +73,111 @@ model User {
   updatedAt      DateTime @updatedAt
 
   organization Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  department   Department?  @relation(fields: [departmentId], references: [id])
-  class        Class?       @relation("ClassStudents", fields: [classId], references: [id])
+  department   Department?   @relation(fields: [departmentId], references: [id])
+  class        Class?        @relation("ClassStudents", fields: [classId], references: [id])
 
   // ✅ Added reverse relations
   headedDepartments Department[] @relation("DepartmentHead") // HOD of multiple departments (optional)
   taughtClasses     Class[]      @relation("ClassTeacher") // Teacher of one or more classes
+}
+
+model Department {
+  id             String   @id @default(uuid())
+  name           String
+  code           String?
+  organizationId String
+  headId         String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization    Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  classes         Class[]
+  head            User?            @relation("DepartmentHead", fields: [headId], references: [id])
+  users           User[]
+  studentProfiles StudentProfile[]
+}
+
+// ========== CLASS ==========
+model Class {
+  id             String   @id @default(uuid())
+  name           String
+  section        String?
+  semester       Int?
+  departmentId   String
+  classTeacherId String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  department              Department               @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  classTeacher            User?                    @relation("ClassTeacher", fields: [classTeacherId], references: [id])
+  students                User[]                   @relation("ClassStudents")
+  sections                Section[]
+  studentClassEnrollments StudentClassEnrollment[]
+}
+
+// ========== SECTION ==========
+model Section {
+  id        String   @id @default(uuid())
+  classId   String
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  class       Class                    @relation(fields: [classId], references: [id])
+  enrollments StudentClassEnrollment[]
+}
+
+// ========== ACADEMIC YEAR ==========
+model AcademicYear {
+  id             String   @id @default(uuid())
+  organizationId String
+  startYear      Int
+  endYear        Int
+  status         String   @default("ACTIVE")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization             @relation(fields: [organizationId], references: [id])
+  enrollments  StudentClassEnrollment[]
+}
+
+// ========== STUDENT PROFILE ==========
+model StudentProfile {
+  id             String    @id @default(uuid())
+  userId         String // from User microservice
+  organizationId String
+  departmentId   String
+  admissionNo    String?
+  admissionDate  DateTime?
+  status         String    @default("ACTIVE")
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  organization Organization             @relation(fields: [organizationId], references: [id])
+  department   Department               @relation(fields: [departmentId], references: [id])
+  enrollments  StudentClassEnrollment[]
+
+  @@unique([userId, organizationId])
+}
+
+// ========== STUDENT CLASS ENROLLMENT (Batch Table) ==========
+model StudentClassEnrollment {
+  id             String   @id @default(uuid())
+  studentId      String
+  classId        String
+  sectionId      String
+  academicYearId String
+  rollNumber     String?
+  isPromoted     Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  student      StudentProfile @relation(fields: [studentId], references: [id])
+  class        Class          @relation(fields: [classId], references: [id])
+  section      Section        @relation(fields: [sectionId], references: [id])
+  academicYear AcademicYear   @relation(fields: [academicYearId], references: [id])
+
+  @@unique([studentId, academicYearId]) // student can have only 1 class per year
 }
 
 enum OrgType {
@@ -125,5 +197,4 @@ enum Role {
   ORG_HEAD
   ORG_MANAGEMENT
   PRINCIPAL
-
 }
